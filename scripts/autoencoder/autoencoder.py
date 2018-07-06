@@ -107,7 +107,7 @@ def get_stacked_models(input_size, num_ae):
 
 # Main Script
 # Debug flag:
-debug = False
+debug = True
 
 # Load data:
 data_path = '../../data/'
@@ -147,8 +147,7 @@ if not os.path.exists(trans_path):
     print '\nCreating transformed data folder...'
     os.mkdir(trans_path)
 
-# Isolate training labels
-labels = train_df['target']
+# Drop training labels
 train_df.drop(columns=['target'], inplace=True, axis=1)
 print('\nShape of training dataset: {} Rows, {} Columns'.format(*train_df.shape))
 print('Shape of test dataset: {} Rows, {} Columns'.format(*test_df.shape))
@@ -236,13 +235,10 @@ for i, encoder in enumerate(encoder_list):
         encoder.load_weights(prior_weight_fname, by_name=True)
         print 'Reducing dimensionality for autoencoder layer %s'%i
         current_data = encoder.predict(current_data)
-        # Split train and test
-        transformed_train = pd.DataFrame(data=current_data[:num_train, :], index=all_idx[:num_train])
-        transformed_test = pd.DataFrame(data=current_data[num_train:, :], index=all_idx[num_train:])
-        # Save train and test
-        print 'Saving transformed train and test sets for AE layer %s'%i
-        transformed_train.to_csv(trans_path + 'train_' + str(transformed_train.shape[1]) + trans_suffix)
-        transformed_test.to_csv(trans_path + 'test_' + str(transformed_test.shape[1]) + trans_suffix)
+        # Save transformed data
+        transformed_data = pd.DataFrame(data=current_data, index=all_idx)
+        print 'Saving transformed dataset for AE layer %s'%i
+        transformed_data.to_csv(trans_path + 'data_' + str(transformed_data.shape[1]) + trans_suffix, index=None)
     else:
         print 'No trained epochs exist for autoencoder layer %s'%i
         continue
