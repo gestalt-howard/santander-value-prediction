@@ -1,7 +1,7 @@
 # Project Ideas and Documentation:
 This markdown file is a log of the various stages and ideas that were explored throughout the course of this Kaggle challenge. This is a "living" document in the sense that it will be frequently updated as new concepts are brainstormed, tested, and documented.
 
-![idea man]()
+![idea man](https://github.com/gestalt-howard/santander-value-prediction/blob/master/images/ideas.png)
 
 ## Stage 0:
 ### Tuned Light GBM:
