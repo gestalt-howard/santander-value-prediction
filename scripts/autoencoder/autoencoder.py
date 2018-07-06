@@ -238,7 +238,7 @@ for i, encoder in enumerate(encoder_list):
         current_data = encoder.predict(current_data)
         # Split train and test
         transformed_train = pd.DataFrame(data=current_data[:num_train, :], index=all_idx[:num_train])
-        transformed_test = pd.DataFrame(data=current_data[:num_train, :], index=all_idx[:num_train])
+        transformed_test = pd.DataFrame(data=current_data[num_train:, :], index=all_idx[num_train:])
         # Save train and test
         print 'Saving transformed train and test sets for AE layer %s'%i
         transformed_train.to_csv(trans_path + 'train_' + str(transformed_train.shape[1]) + trans_suffix)
