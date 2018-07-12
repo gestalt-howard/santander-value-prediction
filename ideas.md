@@ -26,7 +26,7 @@ Model Highlights:
 * Averaging results over many random seed initializations
 
 ### Auto-Encoder / Dimensionality Reduction with CatBoost:
-***Public leaderboard score: TBA***
+***Public leaderboard score: 1.40***
 
 Model Highlights:
 * Uses Stage 0 Vanilla training and test sets
@@ -36,16 +36,37 @@ Model Highlights:
   * Scales target values by
     1. Subtracting out minimum target value
     2. Scaling by dividing all target values by (y_max - y_min)
-* Keras-built stacked auto-encoder (5-layer stack)
+* Uses data transformed by Keras-built stacked auto-encoder (5-layer stack)
 * Dimensionality Reduction / Clustering methods including:
   * Kmeans clustering
   * PCA
   * Truncated SVD
   * Gaussian Random Projection
   * Sparse Random Projection
-* CatBoost
+* CatBoost Regressor with cross-validation (5-fold)
+
+### XGBoost with Piped Feature Extraction:
+***Public leaderboard score: 1.39***
+
+Model Highlights:
+* Feature processing and training pipeline:
+  * Variance threshold to remove constant columns
+  * Removes duplicate columns using numpy's *unique* function
+  * Feature union with:
+    * PCA down to 100 dimensions
+    * Random Forest Classifier to transform dataset into predicted probabilities and binned target values
+    * Statistical value transformations (total of 26 x 6 different variations)
+  * XGBoost Regressor with 10-fold cross-validation
+
+### Stage 0 Blending:
+#### 0v1 and 0v2:
+***Public leaderboard score: 1.38 (402th)*** (at the time)
+#### 0v0, 0v1, and 0v2:
+***Public leaderboard score: 1.38 (380th)*** (at the time)
 
 ## Ongoing Ideas:
+* Try different dimensionality projection concepts with Stage 0 models
+  * T-SNE
 * Find a way to align the train and test set
   * Covariance shift correction ([see here](http://blog.smola.org/post/4110255196/real-simple-covariate-shift-correction))
     * Find features that have highest deviance between training and test sets
@@ -55,5 +76,4 @@ Model Highlights:
   * Area under curve approach
   * Binary 0/1 matching
   * Feature clustering via correlation values
-* Build XGBoost model
 * Weight models based on validation accuracy
