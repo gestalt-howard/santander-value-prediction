@@ -7,7 +7,7 @@
 * Test set
 
 ### Output:
-Estimated importance weight of a given sample
+Estimated importance weights for training set
 
 ### Algorithm:
 1. Compute **A matrix**:
@@ -35,7 +35,7 @@ Estimated importance weight of a given sample
 * Test set
 
 ### Output:
-Estimated importance weight of a given sample
+Estimated importance weights for training set
 
 ### Algorithm:
 1. Split the test set into R disjoint subsets
