@@ -192,9 +192,9 @@ def main():
     best_width, importances = get_best_KLIEP(xtrain_scaled, xtest_scaled, wlist)
     # Save KLIEP results
     print 'Saving trained importance weights...'
-    save_name = 'kliep_weights_%s.pickle'%best_width
+    save_name = 'kliep_weights.pickle'
     with open(save_name, 'wb') as handle:
-        pkl.dump(obj=importances, file=handle, protocol=pkl.HIGHEST_PROTOCOL)
+        pkl.dump(obj=(best_width, importances), file=handle, protocol=pkl.HIGHEST_PROTOCOL)
     print 'Importance weights saved!'
 
 
