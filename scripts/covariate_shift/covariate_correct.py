@@ -181,8 +181,12 @@ def main():
     unique.fit(X=xtrain)
     xtrain = unique.transform(X=xtrain)
     xtest = unique.transform(X=xtest)
-    # Scale data
+    # Apply PCA (if necessary) and scale data
+    max_features = 2000
     xdata = np.concatenate([xtrain, xtest], axis=0)
+    if xdata.shape[1] > max_features and not debug:
+        pca = PCA(n_components=max_features)
+        xdata = pca.fit_transform(xdata)
     scaler = StandardScaler()
     xdata_scaled = scaler.fit_transform(X=xdata)
     xtrain_scaled = xdata_scaled[:len(xtrain), :]
