@@ -8,19 +8,23 @@ import numpy as np
 import pandas as pd
 import pickle as pkl
 
+import os
 import pdb
+import h5py
 import time
+import shutil
 
 from sklearn.model_selection import KFold
 
 from sklearn.preprocessing import StandardScaler
 
+from sklearn.decomposition import PCA
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_selection import VarianceThreshold
 
 
 # High-level parameters
-debug=False
+debug=True
 random_state=0
 
 
@@ -46,6 +50,22 @@ class UniqueTransformer(BaseEstimator, TransformerMixin):
         print 'Filtering for only unique columns...'
         return X[:, self.unique_indexes_]
 
+# Function for loading h5py file
+def load_h5py(fname):
+    with h5py.File(fname, 'r') as handle:
+        return handle['data'][:]
+
+# Function for loading pickle file
+def load_pickle(fname):
+    with open(fname, 'rb') as handle:
+        return pkl.load(handle)
+
+# Function for saving pickle file
+def save_pickle(fname, data):
+    with open(fname, 'wb') as handle:
+        pkl.dump(obj=data, file=handle, protocol=pkl.HIGHEST_PROTOCOL)
+    return None
+
 # Function for setting up
 def get_input(debug=False):
     '''
@@ -53,22 +73,22 @@ def get_input(debug=False):
     '''
     if debug:
         print 'Loading debug train and test datasets...'
-        train = pd.read_csv('../../data/train_debug.csv')
-        test = pd.read_csv('../../data/test_debug.csv')
+        train = load_h5py('../../data/compressed/debug_train.h5')
+        test = load_h5py('../../data/compressed/debug_test.h5')
+        id_test = load_pickle('../../data/compressed/debug_test_id.pickle')
     else:
         print 'Loading original train and test datasets...'
-        train = pd.read_csv('../data/train.csv')
-        test = pd.read_csv('../data/test.csv')
-    y_train_log = np.log1p(train['target'])
-    id_test = test['ID']
+        train = load_h5py('../../data/compressed/full_train.h5')
+        test = load_h5py('../../data/compressed/full_test.h5')
+        id_test = load_pickle('../../data/compressed/full_test_id.pickle')
+    # Isolate target variable
+    y_train_log = np.log1p(train[:, -1])
     # Drop unnecessary columns
-    train.drop(labels=['ID', 'target'], axis=1, inplace=True)
-    test.drop(labels=['ID'], axis=1, inplace=True)
+    train = np.delete(train, -1, 1)
     # Find shape of loaded datasets
     print('Shape of training dataset: {} Rows, {} Columns'.format(*train.shape))
     print('Shape of test dataset: {} Rows, {} Columns'.format(*test.shape))
-
-    return train.values, y_train_log.values, test.values, id_test.values
+    return train, y_train_log, test, id_test
 
 # Function for retrieving width list
 def get_width(debug=False):
@@ -78,7 +98,7 @@ def get_width(debug=False):
     if debug:
         return [10, 1000]
     else:
-        return [0.1, 1, 10, 100, 1000, 10000, 100000]
+        return [10, 50, 90, 100, 110, 500, 1000]
 
 # Function for calculating Gaussian kernel value
 def calc_gaussian(x, center, width):
@@ -130,14 +150,14 @@ def train_KLIEP(train, test, num_kernels=100, kernel_width=10, lr=0.001, a_val=1
         if deviation < stop*np.linalg.norm(alpha_old):
             print 'Converged in %s iterations!'%counter
             importance_weights = get_importances(data=test, alpha=alpha, kc=kernel_centers, kw=kernel_width)
-            return importance_weights, alpha, kernel_centers
+            return importance_weights, alpha, kernel_centers, counter
             break
         else:
             counter += 1
             alpha_old = alpha
 
 # Function for getting the best model
-def get_best_KLIEP(train, test, width_list, n_splits=10, num_kernels=100, lr=0.001, a_val=1, stop=0.00001):
+def get_best_KLIEP(train, test, width_list, path, n_splits=10, num_kernels=100, lr=0.001, a_val=1, stop=0.00001):
     '''
     Function for tuning KLIEP kernel performance
     '''
@@ -151,27 +171,54 @@ def get_best_KLIEP(train, test, width_list, n_splits=10, num_kernels=100, lr=0.0
     j_models = []
     alpha_list = []
     centers_list = []
+    counts = []
     for idx, w in enumerate(width_list):
-        print '\nWorking on split set %s'%idx
+        print 'Working on split set %s'%idx
         print 'Evaluating KLIEP model with Gaussian kernel width of %s...'%w
         j_avglist = []
+        counter_list = []
         for s in split_sets:
-            importance, alpha, center = train_KLIEP(train=train, test=s, num_kernels=num_kernels, kernel_width=w,
-                                     lr=lr, a_val=a_val, stop=stop)
+            importance, alpha, center, count = train_KLIEP(train=train, test=s, num_kernels=num_kernels,
+                                                           kernel_width=w, lr=lr, a_val=a_val, stop=stop)
             j_avglist.append(np.mean(np.log(importance)))
+            counter_list.append(count)
         j_models.append(np.mean(j_avglist))
         alpha_list.append(alpha)
         centers_list.append(center)
-    # Use best model to evaluate train set KLIEP importances
-    best_idx = np.argmax(np.array(j_models))
-    print '\nBest width was: %s'%width_list[best_idx]
-    importance_weights = get_importances(data=train, alpha=alpha_list[best_idx], kc=centers_list[best_idx],
-                                         kw=width_list[best_idx])
-    return width_list[best_idx], importance_weights
+        counts.append(counter_list)
+    # Evalulate train set KLIEP importances for all models
+    eval_results = []
+    for i, idx in enumerate((-np.array(j_models)).argsort()):
+        importance_weights = get_importances(data=train, alpha=alpha_list[idx], kc=centers_list[idx],
+                                             kw=width_list[idx])
+        eval_results.append({'width': width_list[idx],
+                             'num_kernels': num_kernels,
+                             'j_value': j_models[idx],
+                             'place': i,
+                             'counts': counts[idx],
+                             'weights': importance_weights})
+    # Save train set KLIEP importances for all models
+    for result in eval_results:
+        save_pickle(fname=path+'%s_width%s_numk%s.pickle'%(result['place'], result['width'], result['num_kernels']),
+                    data=result)
 
+    # Return information on best model
+    print '\nBest width was: %s'%eval_results[0]['width']
+    return eval_results[0]['width'], eval_results[0]['weights']
 
 # Main script
 def main():
+    # Make covariate shift weights storage folder
+    cs_path = './cs_weights/'
+    if os.path.exists(cs_path):
+        print 'Removing old covariate shift weights folder'
+        shutil.rmtree(cs_path)
+        print 'Creating new covariate shift weights folder'
+        os.mkdir(cs_path)
+    else:
+        print 'Creating new covariate shift weights folder'
+        os.mkdir(cs_path)
+
     # Load data
     xtrain, ytrain_log, xtest, id_test = get_input(debug)
     # Load width list
@@ -182,9 +229,9 @@ def main():
     xtrain = unique.transform(X=xtrain)
     xtest = unique.transform(X=xtest)
     # Apply PCA (if necessary) and scale data
-    max_features = 2000
+    max_features = 100
     xdata = np.concatenate([xtrain, xtest], axis=0)
-    if xdata.shape[1] > max_features and not debug:
+    if xdata.shape[1] > max_features:
         pca = PCA(n_components=max_features)
         xdata = pca.fit_transform(xdata)
     scaler = StandardScaler()
@@ -193,13 +240,9 @@ def main():
     xtest_scaled = xdata_scaled[len(xtrain):, :]
 
     # Get KLIEP weights
-    best_width, importances = get_best_KLIEP(xtrain_scaled, xtest_scaled, wlist)
-    # Save KLIEP results
-    print 'Saving trained importance weights...'
-    save_name = 'kliep_weights.pickle'
-    with open(save_name, 'wb') as handle:
-        pkl.dump(obj=(best_width, importances), file=handle, protocol=pkl.HIGHEST_PROTOCOL)
-    print 'Importance weights saved!'
+    print 'Training KLIEP models...'
+    best_width, importances = get_best_KLIEP(xtrain_scaled, xtest_scaled, wlist, cs_path)
+    print 'KLIEP models trained and weights are saved!'
 
 
 if __name__=='__main__':
