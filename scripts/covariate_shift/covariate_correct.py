@@ -90,16 +90,6 @@ def get_input(debug=False):
     print('Shape of test dataset: {} Rows, {} Columns'.format(*test.shape))
     return train, y_train_log, test, id_test
 
-# Function for retrieving width list
-def get_width(debug=False):
-    '''
-    Function for loading either debug or full width lists
-    '''
-    if debug:
-        return [10, 1000]
-    else:
-        return [10, 50, 90, 100, 110, 500, 1000]
-
 # Function for calculating Gaussian kernel value
 def calc_gaussian(x, center, width):
     return np.exp(-(np.square(np.linalg.norm(np.subtract(x, center))))/(2*np.square(width)))
@@ -173,7 +163,7 @@ def get_best_KLIEP(train, test, width_list, path, n_splits=10, num_kernels=100, 
     centers_list = []
     counts = []
     for idx, w in enumerate(width_list):
-        print 'Working on split set %s'%idx
+        print '\nWorking on split set %s'%idx
         print 'Evaluating KLIEP model with Gaussian kernel width of %s...'%w
         j_avglist = []
         counter_list = []
@@ -204,25 +194,28 @@ def get_best_KLIEP(train, test, width_list, path, n_splits=10, num_kernels=100, 
 
     # Return information on best model
     print '\nBest width was: %s'%eval_results[0]['width']
-    return eval_results[0]['width'], eval_results[0]['weights']
+    return None
 
 # Main script
 def main():
     # Make covariate shift weights storage folder
-    cs_path = './cs_weights/'
+    cs_path = './cs_weights_v1/'
     if os.path.exists(cs_path):
         print 'Removing old covariate shift weights folder'
         shutil.rmtree(cs_path)
-        print 'Creating new covariate shift weights folder'
+        print 'Creating new covariate shift weights folder\n'
         os.mkdir(cs_path)
     else:
-        print 'Creating new covariate shift weights folder'
+        print 'Creating new covariate shift weights folder\n'
         os.mkdir(cs_path)
 
     # Load data
     xtrain, ytrain_log, xtest, id_test = get_input(debug)
-    # Load width list
-    wlist = get_width(debug)
+    # Define width list
+    if debug:
+        wlist = [10, 1000]
+    else:
+        wlist = [100, 110, 120, 130, 140, 150, 200, 250, 300]
     # Remove duplicate columns
     unique = UniqueTransformer()
     unique.fit(X=xtrain)
@@ -239,9 +232,20 @@ def main():
     xtrain_scaled = xdata_scaled[:len(xtrain), :]
     xtest_scaled = xdata_scaled[len(xtrain):, :]
 
-    # Get KLIEP weights
+    # Define number of kernels
+    if debug:
+        num_kernels_list = [100, 250]
+    else:
+        num_kernels_list = [100, 250, 500, 750, 1000]
+    # Start training
     print 'Training KLIEP models...'
-    best_width, importances = get_best_KLIEP(xtrain_scaled, xtest_scaled, wlist, cs_path)
+    for nk in num_kernels_list:
+        print '\nEvaluating with number of kernels: %s'%nk
+        get_best_KLIEP(train=xtrain_scaled,
+                       test=xtest_scaled,
+                       width_list=wlist,
+                       num_kernels=nk,
+                       path=cs_path)
     print 'KLIEP models trained and weights are saved!'
 
 
