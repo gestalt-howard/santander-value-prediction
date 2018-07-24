@@ -24,7 +24,7 @@ from sklearn.feature_selection import VarianceThreshold
 
 
 # High-level parameters
-debug=True
+debug=False
 random_state=0
 
 
@@ -197,7 +197,10 @@ def get_best_KLIEP(train, test, width_list, path, n_splits=10, num_kernels=100, 
 # Main script
 def main():
     # Make covariate shift weights storage folder
-    cs_path = './cs_weights_v1/'
+    if debug:
+        cs_path = './debug_cs_weights_v1/'
+    else:
+        cs_path = './full_cs_weights_v1/'
     if os.path.exists(cs_path):
         print 'Removing old covariate shift weights folder'
         shutil.rmtree(cs_path)
@@ -211,7 +214,7 @@ def main():
     xtrain, ytrain_log, xtest, id_test = get_input(debug)
     # Define width list
     if debug:
-        wlist = [10, 1000]
+        wlist = [130, 500]
     else:
         wlist = [75, 100, 110, 120, 130, 140, 150, 200, 250, 300]
     # Remove duplicate columns
@@ -232,7 +235,7 @@ def main():
 
     # Define number of kernels
     if debug:
-        num_kernels_list = [100, 250]
+        num_kernels_list = [100, 1000]
     else:
         num_kernels_list = [100, 250, 500, 750, 1000]
     # Start training
