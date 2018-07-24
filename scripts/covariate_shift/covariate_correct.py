@@ -76,15 +76,13 @@ def get_input(debug=False):
         train = load_h5py('../../data/compressed/debug_train.h5')
         test = load_h5py('../../data/compressed/debug_test.h5')
         id_test = load_pickle('../../data/compressed/debug_test_id.pickle')
+        y_train_log = np.log1p(load_pickle('../../data/compressed/debug_target.pickle'))
     else:
         print 'Loading original train and test datasets...'
         train = load_h5py('../../data/compressed/full_train.h5')
         test = load_h5py('../../data/compressed/full_test.h5')
         id_test = load_pickle('../../data/compressed/full_test_id.pickle')
-    # Isolate target variable
-    y_train_log = np.log1p(train[:, -1])
-    # Drop unnecessary columns
-    train = np.delete(train, -1, 1)
+        y_train_log = np.log1p(load_pickle('../../data/compressed/full_target.pickle'))
     # Find shape of loaded datasets
     print('Shape of training dataset: {} Rows, {} Columns'.format(*train.shape))
     print('Shape of test dataset: {} Rows, {} Columns'.format(*test.shape))
@@ -215,7 +213,7 @@ def main():
     if debug:
         wlist = [10, 1000]
     else:
-        wlist = [100, 110, 120, 130, 140, 150, 200, 250, 300]
+        wlist = [75, 100, 110, 120, 130, 140, 150, 200, 250, 300]
     # Remove duplicate columns
     unique = UniqueTransformer()
     unique.fit(X=xtrain)
