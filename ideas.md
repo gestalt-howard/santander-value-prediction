@@ -3,7 +3,8 @@ This markdown file is a log of the various stages and ideas that were explored t
 
 ![idea man](https://github.com/gestalt-howard/santander-value-prediction/blob/master/images/ideas.png)
 
-## Stage 0:
+
+## Stage 0: Initial Exploration and Public Resources
 ### Vanilla Preprocessing:
 Preprocessing steps:
 * Saved Stage 0 Vanilla training and test sets
@@ -13,7 +14,7 @@ Preprocessing steps:
 * Found that 3000 features account for around 95% of variance using PCA
 * Visualized distribution of training labels
 
-### Tuned Light GBM:
+### Stage 0v0 - Tuned Light GBM:
 ***Public leaderboard score: 1.44***
 
 **NOTE: Still need to implement Robust Scaler**
@@ -25,7 +26,7 @@ Model Highlights:
   * Number of boosting rounds with small learning rate
 * Averaging results over many random seed initializations
 
-### Auto-Encoder / Dimensionality Reduction with CatBoost:
+### Stage 0v1 - Auto-Encoder / Dimensionality Reduction with CatBoost:
 ***Public leaderboard score: 1.40***
 
 Model Highlights:
@@ -45,7 +46,7 @@ Model Highlights:
   * Sparse Random Projection
 * CatBoost Regressor with cross-validation (5-fold)
 
-### XGBoost with Piped Feature Extraction:
+### Stage 0v2 - XGBoost with Piped Feature Extraction:
 ***Public leaderboard score: 1.39***
 
 Model Highlights:
@@ -64,16 +65,42 @@ Model Highlights:
 #### 0v0, 0v1, and 0v2:
 ***Public leaderboard score: 1.38 (380th)*** (at the time)
 
+
+## Stage 1: Covariate Shift Correction
+Stage 1 deviates from the public kernels into uncharted waters. Specifically, Stage 1 is primarily distinguished by an exploration of covariate shift correction through the Kullback-Leibler Importance Estimation Procedure (KLIEP). I heavily referenced the paper **Direct Importance Estimation with Model Selection and Its Application to Covariate Shift Adaptation** authored by Sugiyama, Nakajima, Kashima, von Bunau, and Kawanabe.
+### KLIEP Importance Weights Training:
+To determine importance weights for samples in the Santander training set, I undertook the following steps:
+* Removed redundant features
+* Applied PCA on dataset down to 100 components
+* Scaled data using sklearn's StandardScaler library
+* Tested combinations of Gaussian Width and number of kernels in a grid-search fashion to determine optimal KLIEP settings
+
+There were a few important takeaways from my research into this algorithm:
+* Higher number of kernels result in better performance (maximum number is the number of test samples)
+* Lower gaussian width results in better performance but excessively small widths will yield extremely small values that will simply be expressed as zero
+
+Ultimately, I proceed with the following models using a **Gaussian Width of 75** and the **Number of Kernels** as 1000. Graphics of my experimentation can be found in:
+
+```
+./scripts/covariate_shift/images/
+```
+
+### Stage 1v0 - XGBoost with Covariate Shift Correction:
+***Public leaderboard score: TBA***
+
+Model Highlights:
+* Uses same cross-validated XGBoost regressor structure as Model 0v2
+* Uses same preprocessing as Model 0v2 except for a scaling operation using StandardScaler following all feature preprocessing
+* Implements a custom objective and evaluation function for the XGBoost model
+  * Custom objective is a **weighted ordinary least squares**
+  * Custom evaluation function is a **root mean squared log error** function
+
+
+## Stage 2: Time-Series Unraveling
+
+
 ## Ongoing Ideas:
+* ***MAIN PRIORITY***: Time-series exploration
 * Try different dimensionality projection concepts with Stage 0 models
   * T-SNE
-* Find a way to align the train and test set
-  * Covariance shift correction ([see here](http://blog.smola.org/post/4110255196/real-simple-covariate-shift-correction))
-    * Find features that have highest deviance between training and test sets
-    * Find weighting factors for the features that have high deviances to weight train and test sets
-    * Find upsampling factors by training on whole feature sets
-  * Exploring applications of Kolmogorov-Smirnov Test
-  * Area under curve approach
-  * Binary 0/1 matching
-  * Feature clustering via correlation values
 * Weight models based on validation accuracy
