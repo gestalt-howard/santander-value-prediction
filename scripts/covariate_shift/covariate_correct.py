@@ -24,7 +24,7 @@ from sklearn.feature_selection import VarianceThreshold
 
 
 # High-level parameters
-debug=False
+debug=True
 random_state=0
 
 
@@ -214,7 +214,7 @@ def main():
     xtrain, ytrain_log, xtest, id_test = get_input(debug)
     # Define width list
     if debug:
-        wlist = [130, 500]
+        wlist = [75, 500]
     else:
         wlist = [75, 100, 110, 120, 130, 140, 150, 200, 250, 300]
     # Remove duplicate columns

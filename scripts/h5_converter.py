@@ -8,11 +8,17 @@ import pandas as pd
 
 
 # Helper functions
+# Function for saving datasets in h5py format
 def save_as_h5py(fname, data):
     data.drop(columns=['ID'], inplace=True)
     with h5py.File(fname, 'w') as handle:
         handle.create_dataset('data', data=data)
     return None
+
+# Function for saving data as pickle files
+def save_as_pickle(fname, data):
+    with open(fname, 'wb') as handle:
+        pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 # Load data
@@ -60,6 +66,18 @@ with open(full_target_path, 'wb') as handle:
 print 'Removing target column for debug and full train sets...'
 debug_train.drop(columns=['target'], inplace=True)
 full_train.drop(columns=['target'], inplace=True)
+
+
+# Save debug and full train and test sets' indexes
+print '\nSaving debug and full train and test sets indexes'
+debug_trainidx_path = compressed_path + 'debug_trainidx.pickle'
+debug_testidx_path = compressed_path + 'debug_testidx.pickle'
+full_trainidx_path = compressed_path + 'full_trainidx.pickle'
+full_testidx_path = compressed_path + 'full_testidx.pickle'
+save_as_pickle(debug_trainidx_path, debug_train.index)
+save_as_pickle(debug_testidx_path, debug_test.index)
+save_as_pickle(full_trainidx_path, full_train.index)
+save_as_pickle(full_testidx_path, full_test.index)
 
 
 # Save compressed datasets
