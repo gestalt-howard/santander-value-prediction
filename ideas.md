@@ -17,7 +17,7 @@ Preprocessing steps:
 ### Stage 0v0 - Tuned Light GBM:
 ***Public leaderboard score: 1.44***
 
-**NOTE: Still need to implement Robust Scaler**
+**NOTE: Could still implement Robust Scaler**
 
 Model Highlights:
 * Used the Stage 0 Vanilla training and test sets
@@ -68,6 +68,7 @@ Model Highlights:
 
 ## Stage 1: Covariate Shift Correction
 Stage 1 deviates from the public kernels into uncharted waters. Specifically, Stage 1 is primarily distinguished by an exploration of covariate shift correction through the Kullback-Leibler Importance Estimation Procedure (KLIEP). I heavily referenced the paper **Direct Importance Estimation with Model Selection and Its Application to Covariate Shift Adaptation** authored by Sugiyama, Nakajima, Kashima, von Bunau, and Kawanabe.
+
 ### KLIEP Importance Weights Training:
 To determine importance weights for samples in the Santander training set, I undertook the following steps:
 * Removed redundant features
@@ -86,7 +87,7 @@ Ultimately, I proceed with the following models using a **Gaussian Width of 75**
 ```
 
 ### Stage 1v0 - XGBoost with Covariate Shift Correction:
-***Public leaderboard score: TBA***
+***Public leaderboard score: 1.45***
 
 Model Highlights:
 * Uses same cross-validated XGBoost regressor structure as Model 0v2
@@ -95,8 +96,41 @@ Model Highlights:
   * Custom objective is a **weighted ordinary least squares**
   * Custom evaluation function is a **root mean squared log error** function
 
+### A Comment on Covariate Shift:
+A relatively untuned implementation of covariate shift on the Santander dataset yielded a result of **1.45** on the public Kaggle leaderboard. While it is disappointing that my covariate shift implementation did not perform better, there were some obvious (in hindsight) reasons why this should have been expected:
+1. Covariate shift is a strategy that relies heavily upon the careful tuning of hyperparameters (something that was not exhaustively explored in Model 1v0)
+2. Since my implementation of covariate shift, it has been revealed that the Santander dataset is actually a scrambled time-series which completely negates the utility of covariate shift which understands dataset features to be independent of each other
+3. The Santander train and test set vary so significantly from each other that (in conjunction with the time-series nature of the dataset features and the target variable) it is infeasible for covariate shift to correct for these deviations
+
+In subsequent, I'm confident that there will be an application that is suitable for covariate shift correction. However, the nature of the problem in this Kaggle challenge does not readily facilitate the usage of this algorithm.
 
 ## Stage 2: Time-Series Unraveling
+Stage 2 follows upon the heels of the failed covariate shift correction stage. In Stage 2, I begin my exploration with the knowledge of the Kaggle community (aka the public kernels). It was the Kaggle community who had initially revealed the time-series nature of the data and a significant portion of this Stage is dedicated to validating and replicating the results shown in the public leaderboard. With only 13 days left on the competition clock, my aim going forward is to catch up to the public leaderboard and try out one more original method.
+
+Stage 2 can be broken-down into 2 phases: Exploration and Modeling. All efforts in the Exploration phase do not utilize machine learning whatsoever and are aimed at uncovering time-series information about the Santander dataset. In the Modeling phase, machine learning models will be reintroduced into the equation.
+
+### Exploration and Validation:
+The folder containing scripts for this segment of the project can be found in:
+```
+./scripts/time_series/
+```
+The intent of this segment was to validate the Kaggle community's findings through a mixture of my own analysis and replicating some public kernels' results.
+
+#### Time-Series Reconstruction:
+***Public leaderboard score: 0.69***
+One of the replication efforts was focused on this public kernel: https://www.kaggle.com/johnfarrell/breaking-lb-fresh-start-with-lag-selection.
+
+On a high-level, this public kernel sought to leverage the time-series nature of the Santander dataset to make predictions on the target variable. A more detailed explanation of the approaches and strategies used in this kernel can be found in my own replication:
+```
+./scripts/time_series/time_construct.ipynb
+```
+The result of this replication effort yielded my highest public leaderboard score yet (0.69). This result affirms that there is indeed a time-series aspect to the Santander dataset that can be used to obtain excellent predictions (independent of using machine learning models).
+
+### Stage 2v0 - LightGBM with Data Leak:
+***Public leaderboard score: TBD***
+
+**NOTE:** Model based on public kernel (https://www.kaggle.com/ogrellier/feature-scoring-vs-zeros)
+Model Highlights:
 
 
 ## Ongoing Ideas:

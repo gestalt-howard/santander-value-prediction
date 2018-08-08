@@ -55,6 +55,14 @@ with open(full_id_path, 'wb') as handle:
     pickle.dump(full_test['ID'], handle)
 
 
+# Save debug and full test sets' ID values
+print '\nSaving debug and full train set ID values...'
+debug_trid_path = compressed_path + 'debug_train_id.pickle'
+full_trid_path = compressed_path + 'full_train_id.pickle'
+save_as_pickle(debug_trid_path, debug_train['ID'])
+save_as_pickle(full_trid_path, full_train['ID'])
+
+
 # Save debug and full train sets' target values
 print '\nSaving debug and full train set target values...'
 debug_target_path = compressed_path + 'debug_target.pickle'
@@ -66,6 +74,13 @@ with open(full_target_path, 'wb') as handle:
 print 'Removing target column for debug and full train sets...'
 debug_train.drop(columns=['target'], inplace=True)
 full_train.drop(columns=['target'], inplace=True)
+
+
+# Save feature names
+print '\nSaving feature names...'
+features_path = compressed_path + 'feature_names.pickle'
+feature_names = debug_test.loc[:, debug_test.columns!='ID'].columns.values
+save_as_pickle(features_path, feature_names)
 
 
 # Save debug and full train and test sets' indexes
