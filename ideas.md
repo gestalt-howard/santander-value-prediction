@@ -131,6 +131,9 @@ The result of this replication effort yielded my highest public leaderboard scor
 
 **NOTE:** Model based on public kernel (https://www.kaggle.com/ogrellier/feature-scoring-vs-zeros)
 Model Highlights:
+* Improves upon the time-series reconstruction results (with public leaderboard score of 0.69) by adding a LightGBM component
+  * The addition of a boosting procedure aims to improve upon the time-series prediction by filling in for unknown leak values (values that were predicted as 0 during the time-series reconstruction)
+* Includes a feature-scoring function that analyzes the features to find each individual feature's predictive value (measured by a RMSE score)
 
 
 ## Ongoing Ideas:
