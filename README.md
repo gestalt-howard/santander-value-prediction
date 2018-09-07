@@ -3,6 +3,11 @@
 
 ![santander logo](https://github.com/gestalt-howard/santander-value-prediction/blob/master/images/santander_logo.jpg)
 
+***Final Placement Info:***
+* Bronze medalist
+* Top 6%
+* 243rd out of 4484 competitors
+
 Welcome to my project repo for the 2018 Santander Value Prediction Kaggle Challenge! This repo contains the scripts, data files, and submission results that I accumulated while participating in the Kaggle challenge. From the period of June 18, 2018 to the project completion date, I created 10 unique machine learning models and conducted over half-a-dozen in-depth analysis into the Santander dataset. Collectively, the work demonstrated in this repo represents the most-involved data science / machine learning project I've undertaken in my budding career thus far. If you would like to look through my work, I ***strongly recommend*** using my project write-up (contained in the file **project_summary.pdf**) as a guide. In that document, you'll find a chronological account of my journey throughout this Kaggle challenge. Feel free to skip through sections as you desire.   
 
 ## Repo Directory Guide:
@@ -32,4 +37,7 @@ A high-level overview of the directories and subdirectories is listed below. Ple
 4. Have fun running through my models!
   * Remember to reference my project write-up to gain a high-level intuition of the model concepts before diving into the raw code
 
+## One Last Comment...
 As a final note, please feel free to reach out to me in case you are particularly curious about one of my processes or simply need help in getting some path dependencies sorted. Thank you for taking the time to review this repo! It is my proudest project to-date.
+
+Also, I would be remiss to not give a massive, heartfelt thanks to the collective Kaggle community whose generous sharing of wisdom has been a steady guide throughout this challenge.
